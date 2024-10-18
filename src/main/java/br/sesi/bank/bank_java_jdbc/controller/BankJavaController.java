@@ -145,7 +145,7 @@ public class BankJavaController {
         teclado.next();
     }
     private void realizarTransferencia() {
-        System.out.println("Digite o número da conta de ORIGEN: ");
+        System.out.println("Digite o número da conta de ORIGEM: ");
         int numeroConta0rigem = teclado.nextInt();
         System.out.println("Digite o número da conta de DESTINO: ");
         int numeroContaDestino = teclado.nextInt();
