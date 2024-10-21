@@ -111,7 +111,7 @@ public class BankJavaController {
         teclado.next();
     }
     private void consultarSaldo() {
-        System.out.println("Digite o número da conta:");
+    System.out.println("Digite o número da conta:");
         var numeroDaConta = teclado.nextInt();
         var saldo = service.consultarSaldo(numeroDaConta);
         System.out.println("Saldo da conta: " +saldo);
@@ -122,7 +122,7 @@ public class BankJavaController {
     private void realizarSaque() {
         System.out.println("Digite o número da conta:");
         var numeroDaConta = teclado.nextInt();
-
+    
         System.out.println("Digite o valor do saque:");
         var valor = teclado.nextBigDecimal();
 
