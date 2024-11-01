@@ -1,23 +1,26 @@
 package br.sesi.bank.bank_java_jdbc.service;
 
-import br.sesi.bank.bank_java_jdbc.domain.cliente.Cliente;
+import br.sesi.bank.bank_java_jdbc.config.ConnectionFactory;
 import br.sesi.bank.bank_java_jdbc.domain.conta.Conta;
+import br.sesi.bank.bank_java_jdbc.domain.conta.ContaDAO;
 import br.sesi.bank.bank_java_jdbc.domain.conta.DadosAberturaConta;
 import br.sesi.bank.bank_java_jdbc.exceptions.RegraDeNegocioException;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
+import java.sql.Connection;
 import java.util.Set;
 
 public class ContaService {
 
-    private Set<Conta> contas = new HashSet<>();
+    private ConnectionFactory connection;
 
     public ContaService() {
+        this.connection = new ConnectionFactory();
     }
 
     public Set<Conta> listarContasAbertas() {
-        return this.contas;
+        Connection conn = connection.recuperarConexao();
+        return new ContaDAO(conn).listar();
     }
 
     public BigDecimal consultarSaldo(Integer numeroDaConta) {
@@ -26,18 +29,13 @@ public class ContaService {
     }
 
     public void abrir(DadosAberturaConta dadosDaConta) {
-        Cliente cliente = new Cliente(dadosDaConta.dadosCliente);
-        Conta conta = new Conta(dadosDaConta.numero, BigDecimal.ZERO, cliente);
-
-        if (contas.contains(conta)) {
-            throw new RegraDeNegocioException("Já existe outra conta aberta com o mesmo número!");
-        }
-
-        contas.add(conta);
+        Connection conn = connection.recuperarConexao();
+        new ContaDAO(conn).salvar(dadosDaConta);
     }
 
     public void realizarSaque(Integer numeroDaConta, BigDecimal valor) {
-        var conta = buscarContaPorNumero(numeroDaConta);
+        Conta conta = buscarContaPorNumero(numeroDaConta);
+
         if (valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RegraDeNegocioException("Valor do saque deve ser superior a zero!");
         }
@@ -46,24 +44,30 @@ public class ContaService {
             throw new RegraDeNegocioException("Saldo insuficiente!");
         }
 
-        conta.sacar(valor);
+        if (!conta.isAtivo()) {
+            throw new RegraDeNegocioException("Conta não está ativa");
+        }
+        BigDecimal novoValor = conta.getSaldo().subtract(valor);
+        alterar(conta, novoValor);
     }
 
     public void realizarDeposito(Integer numeroDaConta, BigDecimal valor) {
         var conta = buscarContaPorNumero(numeroDaConta);
+
         if (valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RegraDeNegocioException("Valor do depósito deve ser superior a zero!");
         }
 
-        conta.depositar(valor);
+        if (!conta.isAtivo()) {
+            throw new RegraDeNegocioException("Conta não está ativa");
+        }
+        BigDecimal novoValor = conta.getSaldo().add(valor);
+        alterar(conta, novoValor);
     }
 
     public void realizaTransferencia(Integer numeroContaOrigem, Integer numeroContaDestino, BigDecimal valor) {
-        var contaOrigem = buscarContaPorNumero(numeroContaOrigem);
-        var contaDestino = buscarContaPorNumero(numeroContaDestino);
-
-        realizarSaque(numeroContaOrigem, valor);
-        contaDestino.depositar(valor);
+        this.realizarSaque(numeroContaOrigem, valor);
+        this.realizarDeposito(numeroContaDestino, valor);
     }
 
     public void encerrar(Integer numeroDaConta) {
@@ -72,14 +76,23 @@ public class ContaService {
             throw new RegraDeNegocioException("Conta não pode ser encerrada pois ainda possui saldo!");
         }
 
-        contas.remove(conta);
+        Connection conn = connection.recuperarConexao();
+
+        new ContaDAO(conn).deletar(numeroDaConta);
     }
 
     private Conta buscarContaPorNumero(Integer numero) {
-        return contas
-                .stream()
-                .filter(c -> c.getNumero() == (numero))
-                .findFirst()
-                .orElseThrow(() -> new RegraDeNegocioException("Não existe conta cadastrada com esse número"));
+        Connection conn = connection.recuperarConexao();
+        Conta conta = new ContaDAO(conn).listarPorNumero(numero);
+        if (conta != null) {
+            return conta;
+        } else {
+            throw new RegraDeNegocioException("Não existe conta cadastrada com esse número!");
+        }
+    }
+
+    private void alterar(Conta conta, BigDecimal valor) {
+        Connection conn = connection.recuperarConexao();
+        new ContaDAO(conn).alterarSaldo(conta.getNumero(), valor);
     }
 }

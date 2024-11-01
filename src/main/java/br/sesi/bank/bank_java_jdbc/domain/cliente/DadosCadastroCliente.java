@@ -1,7 +1,5 @@
 package br.sesi.bank.bank_java_jdbc.domain.cliente;
 
-import java.time.LocalDate;
-
 public class DadosCadastroCliente {
    public String nome;
    public String cpf;

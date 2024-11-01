@@ -2,6 +2,7 @@ package br.sesi.bank.bank_java_jdbc.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -16,8 +17,8 @@ public class ConnectionFactory {
 
     private HikariDataSource createDataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/bank_sesi");
-        config.setUsername("root");
+        config.setJdbcUrl("jdbc:postgresql://localhost:5432/bank-sesi");
+        config.setUsername("postgres");
         config.setPassword("root");
         config.setMaximumPoolSize(10);
 

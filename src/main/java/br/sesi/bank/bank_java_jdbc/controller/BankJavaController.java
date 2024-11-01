@@ -135,7 +135,7 @@ public class BankJavaController {
         System.out.println("Digite o número da conta:");
         var numeroDaConta = teclado.nextInt();
 
-        System.out.println("Digite o número da conta:");
+        System.out.println("Digite o novo valor:");
         var valor = teclado.nextBigDecimal();
 
         service.realizarDeposito(numeroDaConta, valor);
